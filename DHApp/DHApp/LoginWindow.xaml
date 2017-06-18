@@ -4,8 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     FontSize="16"
     ResizeMode="NoResize"
+    ShowInTaskbar="False"
     SizeToContent="WidthAndHeight"
-    Topmost="True"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None">
     <Window.Effect>
@@ -15,14 +15,31 @@
         <SolidColorBrush x:Key="ThemeColor" Color="#FFFE7523" />
     </Window.Resources>
     <StackPanel>
-        <StackPanel Background="{StaticResource ThemeColor}" Orientation="Horizontal">
+        <Grid x:Name="TitleGrid" Background="{StaticResource ThemeColor}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
             <Image Width="48" Source="dhlogo.jpg" />
             <TextBlock
+                Grid.Column="1"
                 Margin="8,0,0,0"
                 VerticalAlignment="Center"
                 Foreground="White"
                 Text="Donanım Haber Giriş" />
-        </StackPanel>
+            <Button
+                Grid.Column="2"
+                Width="32"
+                Height="32"
+                Margin="0,0,4,0"
+                Background="Transparent"
+                BorderThickness="0"
+                Click="Close_Click"
+                Content="&#xE894;"
+                FontFamily="Segoe MDL2 Assets"
+                Foreground="White" />
+        </Grid>
         <StackPanel Margin="8">
             <TextBlock Foreground="{StaticResource ThemeColor}" Text="Kullanıcı Adı:" />
             <TextBox

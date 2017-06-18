@@ -33,7 +33,7 @@
             Height="120"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Click="Button_Click"
+            Click="LoginButton_Click"
             Content="Giriş yap"
             FontSize="16" />
     </Grid>

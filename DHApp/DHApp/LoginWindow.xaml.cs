@@ -6,25 +6,34 @@ namespace DHApp
 {
     public partial class LoginWindow : Window
     {
-        //public bool Result { get; private set; }
-
         public LoginWindow()
         {
             InitializeComponent();
+
+            TitleGrid.MouseDown += (sender, e) =>
+            {
+                if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+                    DragMove();
+            };
+
             LoginNameTB.Text = "Microsoft Specialist";
             PasswordPB.Password = string.Empty;
         }
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
+            LoginNameTB.IsEnabled = false;
+            PasswordPB.IsEnabled = false;
             LoginButton.IsEnabled = false;
-            DialogResult = await DHClient.LoginAsync(LoginNameTB.Text, PasswordPB.Password);
+            bool result = await DHClient.LoginAsync(LoginNameTB.Text, PasswordPB.Password);
 
-            if (!DialogResult.Value)
+            if (!result)
+            {
+                LoginNameTB.IsEnabled = true;
+                PasswordPB.IsEnabled = true;
                 LoginButton.IsEnabled = true;
-
-            //else
-            //    Close();
+            }
+            else DialogResult = true;
         }
 
         private void Box_TextChanged(object sender, RoutedEventArgs e)
@@ -40,6 +49,11 @@ namespace DHApp
             var red = new SolidColorBrush(Colors.Red);
             LoginNameTB.BorderBrush = isNameOk ? orange : red;
             PasswordPB.BorderBrush = isPassOk ? orange : red;
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
         }
     }
 }
