@@ -13,8 +13,8 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <ListBox x:Name="NotificationList">
-            <ListBox.ItemTemplate>
+        <ListView x:Name="NotificationList" SelectionChanged="NotificationList_SelectionChanged">
+            <ListView.ItemTemplate>
                 <DataTemplate DataType="local:DHNotification">
                     <StackPanel>
                         <TextBlock Text="{Binding Content}" />
@@ -24,8 +24,8 @@
                         </StackPanel>
                     </StackPanel>
                 </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+            </ListView.ItemTemplate>
+        </ListView>
         <Button
             x:Name="LoginButton"
             Grid.Column="1"

@@ -51,9 +51,7 @@ namespace DHApp
             PasswordPB.BorderBrush = isPassOk ? orange : red;
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e)
-        {
+        private void Close_Click(object sender, RoutedEventArgs e) =>
             DialogResult = false;
-        }
     }
 }

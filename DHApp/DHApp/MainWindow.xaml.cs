@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Timers;
 using System.Windows;
+using System.Windows.Controls;
 //using WinForms = System.Windows.Forms;
 
 namespace DHApp
@@ -31,7 +33,7 @@ namespace DHApp
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            var loginWindow = new LoginWindow { Owner = this };
+            var loginWindow = new LoginWindow { /*Owner = this*/ };
 
             if (loginWindow.ShowDialog().Value)
             {
@@ -46,5 +48,8 @@ namespace DHApp
             var loginWindow = new LoginWindow { Owner = this };
             loginWindow.ShowDialog();
         }
+
+        private void NotificationList_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
+            Process.Start(((DHNotification)NotificationList.SelectedItem).Url);
     }
 }

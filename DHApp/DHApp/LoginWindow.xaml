@@ -11,9 +11,6 @@
     <Window.Effect>
         <DropShadowEffect />
     </Window.Effect>
-    <Window.Resources>
-        <SolidColorBrush x:Key="ThemeColor" Color="#FFFE7523" />
-    </Window.Resources>
     <StackPanel>
         <Grid x:Name="TitleGrid" Background="{StaticResource ThemeColor}">
             <Grid.ColumnDefinitions>
