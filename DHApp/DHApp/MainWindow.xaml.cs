@@ -1,8 +1,11 @@
-﻿using System;
+﻿using DHApp.Properties;
+using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 //using WinForms = System.Windows.Forms;
 
 namespace DHApp
@@ -10,17 +13,38 @@ namespace DHApp
     public partial class MainWindow : Window
     {
         //private WinForms.NotifyIcon notifyIcon;
-        //private Timer timer = new Timer(/*ms*/ 1000 * /*s*/ 60 * /*m*/ 0.5);
+        private Timer timer = new Timer(1000 * 30 * 1);
 
         public MainWindow()
         {
             InitializeComponent();
-            Loaded += MainWindow_Loaded;
 
-            //TODO: Move Login dialog to MainWindow
+            timer.Elapsed += Timer_Elapsed;
 
-            //timer.Elapsed += Timer_Elapsed;
-            //timer.Start();
+            DHClient.Login += async cookie =>
+            {
+                Settings.Default.Cookie = cookie;
+                Settings.Default.Save();
+
+                Show();
+                ToggleVisibilities();
+                UsernameText.Text = DHClient.Username;
+
+                await ShowProgress(async () => NotificationList.ItemsSource = await DHClient.GetNotificationsAsync());
+
+                timer.Start();
+            };
+
+            DHClient.Logout += () =>
+            {
+                timer.Stop();
+                Settings.Default.Cookie = null;
+                Settings.Default.Save();
+
+                ToggleVisibilities();
+                UsernameText.Text = null;
+                NotificationList.ItemsSource = null;
+            };
 
             //notifyIcon = new WinForms.NotifyIcon
             //{
@@ -29,27 +53,63 @@ namespace DHApp
             //    Visible = true
             //};
             //notifyIcon.MouseDown += Notifier_MouseDown;
+
         }
 
-        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        private async void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            var loginWindow = new LoginWindow { /*Owner = this*/ };
+            await ShowProgress(async () => NotificationList.ItemsSource = await DHClient.GetNotificationsAsync());
+        }
 
-            if (loginWindow.ShowDialog().Value)
+        private async void IgnoreButton_Click(object sender, RoutedEventArgs e)
+        {
+            await ShowProgress(async () =>
             {
-                LoginButton.Visibility = Visibility.Collapsed;
-                NotificationList.ItemsSource = await DHClient.GetNotificationsAsync();
-                //var cookies = DHClient.Cookies.GetCookies(new Uri(".donanimhaber.com/"));
+                await DHClient.IgnoreNotificationsAsync();
+                NotificationList.ItemsSource = null;
+            });
+        }
+
+        private async void LogoutButton_Click(object sender, RoutedEventArgs e)
+        {
+            await ShowProgress(async () => await DHClient.LogoutAsync());
+        }
+
+        private void NotificationList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Process.Start(((DHNotification)NotificationList.SelectedItem).Url);
+        }
+
+        private async Task ShowProgress(Func<Task> task)
+        {
+            await Dispatcher.InvokeAsync(async () =>
+            {
+                LogoutButton.IsEnabled = false;
+                IgnoreButton.IsEnabled = false;
+                Progress.Visibility = Visibility.Visible;
+
+                await task();
+
+                LogoutButton.IsEnabled = true;
+                IgnoreButton.IsEnabled = true;
+                Progress.Visibility = Visibility.Collapsed;
+            });
+        }
+
+        private void TryLogin(object sender, RoutedEventArgs e)
+        {
+            if (!DHClient.LoginWithCookie(Settings.Default.Cookie))
+            {
+                Hide();
+                new LoginWindow().ShowDialog();
+                Show();
             }
         }
 
-        private void LoginButton_Click(object sender, RoutedEventArgs e)
+        private void ToggleVisibilities()
         {
-            var loginWindow = new LoginWindow { Owner = this };
-            loginWindow.ShowDialog();
+            foreach (FrameworkElement item in RootPanel.Children)
+                item.Visibility = item.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
         }
-
-        private void NotificationList_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
-            Process.Start(((DHNotification)NotificationList.SelectedItem).Url);
     }
 }

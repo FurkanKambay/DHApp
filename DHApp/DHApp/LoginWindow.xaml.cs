@@ -1,4 +1,4 @@
-﻿using System;
+﻿using DHApp.Properties;
 using System.Windows;
 using System.Windows.Media;
 
@@ -10,11 +10,7 @@ namespace DHApp
         {
             InitializeComponent();
 
-            TitleGrid.MouseDown += (sender, e) =>
-            {
-                if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
-                    DragMove();
-            };
+            TitleGrid.MouseLeftButtonDown += (_, __) => DragMove();
 
             LoginNameTB.Text = "Microsoft Specialist";
             PasswordPB.Password = string.Empty;
@@ -22,18 +18,12 @@ namespace DHApp
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            LoginNameTB.IsEnabled = false;
-            PasswordPB.IsEnabled = false;
-            LoginButton.IsEnabled = false;
-            bool result = await DHClient.LoginAsync(LoginNameTB.Text, PasswordPB.Password);
+            LoginNameTB.IsEnabled = PasswordPB.IsEnabled = LoginButton.IsEnabled = false;
 
-            if (!result)
-            {
-                LoginNameTB.IsEnabled = true;
-                PasswordPB.IsEnabled = true;
-                LoginButton.IsEnabled = true;
-            }
-            else DialogResult = true;
+            if (await DHClient.LoginAsync(LoginNameTB.Text, PasswordPB.Password))
+                DialogResult = true;
+            else
+                LoginNameTB.IsEnabled = PasswordPB.IsEnabled = LoginButton.IsEnabled = true;
         }
 
         private void Box_TextChanged(object sender, RoutedEventArgs e)
@@ -42,8 +32,6 @@ namespace DHApp
             bool isPassOk = !string.IsNullOrWhiteSpace(PasswordPB.Password);
 
             LoginButton.IsEnabled = isNameOk && isPassOk;
-
-            //BUG: is there?
 
             var orange = new SolidColorBrush(Colors.DarkOrange);
             var red = new SolidColorBrush(Colors.Red);
