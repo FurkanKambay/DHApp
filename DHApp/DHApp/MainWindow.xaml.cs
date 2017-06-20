@@ -6,22 +6,34 @@ using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
-//using WinForms = System.Windows.Forms;
+using WinForms = System.Windows.Forms;
 
 namespace DHApp
 {
     public partial class MainWindow : Window
     {
-        //private WinForms.NotifyIcon notifyIcon;
-        private Timer timer = new Timer(1000 * 30 * 1);
+        private WinForms.NotifyIcon trayIcon;
+        private Timer timer = new Timer(1000 * 10 * 1);
 
         public MainWindow()
         {
             InitializeComponent();
 
+            TitleGrid.MouseLeftButtonDown += (_, __) => DragMove();
+
+            TitleGrid.Visibility
+                = UsernameText.Visibility
+                = IgnoreButton.Visibility
+                = LogoutButton.Visibility
+                = Progress.Visibility
+                = NotificationList.Visibility
+                = Visibility.Collapsed;
+
             timer.Elapsed += Timer_Elapsed;
 
+#pragma warning disable RECS0165
             DHClient.Login += async cookie =>
+#pragma warning restore RECS0165
             {
                 Settings.Default.Cookie = cookie;
                 Settings.Default.Save();
@@ -46,13 +58,13 @@ namespace DHApp
                 NotificationList.ItemsSource = null;
             };
 
-            //notifyIcon = new WinForms.NotifyIcon
-            //{
-            //    Icon = new System.Drawing.Icon("dh.ico"),
-            //    ContextMenu = new WinForms.ContextMenu(),
-            //    Visible = true
-            //};
-            //notifyIcon.MouseDown += Notifier_MouseDown;
+            trayIcon = new WinForms.NotifyIcon
+            {
+                Icon = new System.Drawing.Icon("dhlogo.jpg"), //UNDONE: not found. .ico?
+                ContextMenu = new WinForms.ContextMenu(),
+                Visible = true
+            };
+            //trayIcon.MouseDown += Notifier_MouseDown;
 
         }
 
@@ -86,12 +98,14 @@ namespace DHApp
             {
                 LogoutButton.IsEnabled = false;
                 IgnoreButton.IsEnabled = false;
+                NotificationList.IsEnabled = false;
                 Progress.Visibility = Visibility.Visible;
 
                 await task();
 
                 LogoutButton.IsEnabled = true;
                 IgnoreButton.IsEnabled = true;
+                NotificationList.IsEnabled = true;
                 Progress.Visibility = Visibility.Collapsed;
             });
         }
@@ -108,8 +122,20 @@ namespace DHApp
 
         private void ToggleVisibilities()
         {
+#pragma warning disable IDE0007
             foreach (FrameworkElement item in RootPanel.Children)
+#pragma warning restore IDE0007
                 item.Visibility = item.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void Minimize_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
         }
     }
 }

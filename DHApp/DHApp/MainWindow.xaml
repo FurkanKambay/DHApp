@@ -5,47 +5,95 @@
     Title="DH Bildirim"
     Width="480"
     Height="480"
+    FontSize="16"
     Icon="dhlogo.jpg"
     Loaded="TryLogin"
+    ResizeMode="NoResize"
     SizeToContent="Height"
-    WindowStartupLocation="CenterScreen">
+    WindowStartupLocation="CenterScreen"
+    WindowStyle="None">
     <StackPanel x:Name="RootPanel">
+        <Grid x:Name="TitleGrid" Background="{StaticResource ThemeColor}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Image Width="48" Source="dhlogo.jpg" />
+            <TextBlock
+                Grid.Column="1"
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                FontSize="20"
+                Foreground="White"
+                Text="Donanım Haber" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button
+                    Width="32"
+                    Height="32"
+                    Margin="0,0,4,0"
+                    VerticalContentAlignment="Bottom"
+                    Background="{StaticResource ThemeColor}"
+                    BorderThickness="0"
+                    Click="Minimize_Click"
+                    Content="&#xE921;"
+                    FontFamily="Segoe MDL2 Assets"
+                    Foreground="White" />
+                <Button
+                    Width="32"
+                    Height="32"
+                    Margin="0,0,4,0"
+                    Background="{StaticResource ThemeColor}"
+                    BorderThickness="0"
+                    Click="Close_Click"
+                    Content="&#xE894;"
+                    FontFamily="Segoe MDL2 Assets"
+                    Foreground="White" />
+            </StackPanel>
+        </Grid>
         <Button
             x:Name="LoginButton"
             Margin="4"
+            Background="{StaticResource ThemeColor}"
             Click="TryLogin"
             Content="Giriş yap"
-            FontSize="16" />
-        <TextBox
+            Foreground="White" />
+        <TextBlock
             x:Name="UsernameText"
             Margin="4"
             HorizontalAlignment="Center"
-            FontSize="16"
-            IsReadOnly="True"
-            Visibility="Collapsed" />
+            Foreground="{StaticResource ThemeColor}">
+            <TextBlock.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Çıkış yap" /> 
+                    <!--  TODO: icon, action  -->
+                </ContextMenu>
+            </TextBlock.ContextMenu>
+        </TextBlock>
         <Button
             x:Name="IgnoreButton"
             Margin="4,0,4,4"
+            Background="{StaticResource ThemeColor}"
             Click="IgnoreButton_Click"
             Content="Bildirimleri Yoksay"
-            FontSize="16"
-            Visibility="Collapsed" />
+            Foreground="White" />
         <Button
             x:Name="LogoutButton"
             Margin="4,0,4,4"
+            Background="{StaticResource ThemeColor}"
             Click="LogoutButton_Click"
             Content="Çıkış yap"
-            FontSize="16"
-            Visibility="Collapsed" />
+            Foreground="White" />
         <ProgressBar
             x:Name="Progress"
             Height="8"
-            IsIndeterminate="True"
-            Visibility="Collapsed" />
+            Background="White"
+            Foreground="{StaticResource ThemeColor}"
+            IsIndeterminate="True" />
         <ListBox
             x:Name="NotificationList"
             Cursor="Hand"
-            SelectionChanged="NotificationList_SelectionChanged"
-            Visibility="Collapsed" />
+            FontSize="12"
+            SelectionChanged="NotificationList_SelectionChanged" />
     </StackPanel>
 </Window>

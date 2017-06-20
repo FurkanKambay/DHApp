@@ -29,6 +29,9 @@ namespace DHApp
 
         public static async Task<bool> LoginAsync(string username, string password)
         {
+            Contract.Requires(string.IsNullOrEmpty(password) == false);
+            Contract.Requires(string.IsNullOrEmpty(username) == false);
+
             if (IsLoggedIn)
                 throw new InvalidOperationException("Already logged in");
 
