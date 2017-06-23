@@ -1,141 +1,124 @@
 ﻿using DHApp.Properties;
 using System;
-using System.Diagnostics;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
-using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Threading;
-using WinForms = System.Windows.Forms;
+using System.Windows.Media.Imaging;
 
 namespace DHApp
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        private WinForms.NotifyIcon trayIcon;
-        private Timer timer = new Timer(1000 * 10 * 1);
+        private static App app = (App)Application.Current;
+
+        private IEnumerable<DHNotification> notifications;
+        public IEnumerable<DHNotification> Notifications
+        {
+            get => notifications;
+            set
+            {
+                if (notifications != value)
+                {
+                    notifications = value;
+                    RaisePropertyChanged(nameof(Notifications));
+                }
+            }
+        }
 
         public MainWindow()
         {
             InitializeComponent();
 
+            app.MainWindow = this;
+            DataContext = this;
+
             TitleGrid.MouseLeftButtonDown += (_, __) => DragMove();
 
-            TitleGrid.Visibility
-                = UsernameText.Visibility
-                = IgnoreButton.Visibility
-                = LogoutButton.Visibility
-                = Progress.Visibility
-                = NotificationList.Visibility
-                = Visibility.Collapsed;
-
-            timer.Elapsed += Timer_Elapsed;
-
-#pragma warning disable RECS0165
-            DHClient.Login += async cookie =>
-#pragma warning restore RECS0165
-            {
-                Settings.Default.Cookie = cookie;
-                Settings.Default.Save();
-
-                Show();
-                ToggleVisibilities();
-                UsernameText.Text = DHClient.Username;
-
-                await ShowProgress(async () => NotificationList.ItemsSource = await DHClient.GetNotificationsAsync());
-
-                timer.Start();
-            };
-
-            DHClient.Logout += () =>
-            {
-                timer.Stop();
-                Settings.Default.Cookie = null;
-                Settings.Default.Save();
-
-                ToggleVisibilities();
-                UsernameText.Text = null;
-                NotificationList.ItemsSource = null;
-            };
-
-            trayIcon = new WinForms.NotifyIcon
-            {
-                Icon = new System.Drawing.Icon("dhlogo.jpg"), //UNDONE: not found. .ico?
-                ContextMenu = new WinForms.ContextMenu(),
-                Visible = true
-            };
-            //trayIcon.MouseDown += Notifier_MouseDown;
-
+            DHClient.LoggedIn += OnDHLogin;
+            DHClient.LoggedOut += OnDHLogout;
         }
 
-        private async void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        private async void OnDHLogin(string cookie)
         {
-            await ShowProgress(async () => NotificationList.ItemsSource = await DHClient.GetNotificationsAsync());
+            Settings.Default.Cookie = cookie;
+            Settings.Default.Save();
+
+            UsernameText.Text = DHClient.Username;
+
+            if (!string.IsNullOrWhiteSpace(DHClient.AvatarUrl))
+                Avatar.Source = new BitmapImage(new Uri(DHClient.AvatarUrl));
+
+            await RefreshNotificationsAsync();
+            app.StartBackgroundWorker();
         }
 
-        private async void IgnoreButton_Click(object sender, RoutedEventArgs e)
+        private void OnDHLogout()
         {
-            await ShowProgress(async () =>
+            app.StopBackgroundWorker();
+
+            Settings.Default.Cookie = null;
+            Settings.Default.Save();
+
+            NotificationList.ItemsSource = null;
+            ShowLoginWindow();
+        }
+
+        private void WindowLoaded(object sender, RoutedEventArgs e)
+        {
+            ShowLoginWindow();
+        }
+
+        private async void RefreshClicked(object sender, RoutedEventArgs e)
+        {
+            await RefreshNotificationsAsync();
+        }
+
+        private async void IgnoreClicked(object sender, RoutedEventArgs e)
+        {
+            await DHClient.IgnoreNotificationsAsync();
+            Notifications = null;
+        }
+
+        private async void LogoutClicked(object sender, RoutedEventArgs e)
+        {
+            await DHClient.LogOutAsync();
+        }
+
+        private void CloseClicked(object sender, RoutedEventArgs e)
+        {
+            app.ShowInfo(
+                "Program arka planda çalışmaya devam ediyor.",
+                "Yeni bildirimlerden haberdar edileceksiniz.");
+            app.StartBackgroundWorker();
+            Hide();
+        }
+
+        private void NotificationClicked(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is ListViewItem item && item.IsSelected && item.Content is DHNotification notification)
             {
-                await DHClient.IgnoreNotificationsAsync();
-                NotificationList.ItemsSource = null;
-            });
-        }
-
-        private async void LogoutButton_Click(object sender, RoutedEventArgs e)
-        {
-            await ShowProgress(async () => await DHClient.LogoutAsync());
-        }
-
-        private void NotificationList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            Process.Start(((DHNotification)NotificationList.SelectedItem).Url);
-        }
-
-        private async Task ShowProgress(Func<Task> task)
-        {
-            await Dispatcher.InvokeAsync(async () =>
-            {
-                LogoutButton.IsEnabled = false;
-                IgnoreButton.IsEnabled = false;
-                NotificationList.IsEnabled = false;
-                Progress.Visibility = Visibility.Visible;
-
-                await task();
-
-                LogoutButton.IsEnabled = true;
-                IgnoreButton.IsEnabled = true;
-                NotificationList.IsEnabled = true;
-                Progress.Visibility = Visibility.Collapsed;
-            });
-        }
-
-        private void TryLogin(object sender, RoutedEventArgs e)
-        {
-            if (!DHClient.LoginWithCookie(Settings.Default.Cookie))
-            {
-                Hide();
-                new LoginWindow().ShowDialog();
-                Show();
+                System.Diagnostics.Process.Start(notification.Url);
             }
         }
 
-        private void ToggleVisibilities()
+        private void ShowLoginWindow()
         {
-#pragma warning disable IDE0007
-            foreach (FrameworkElement item in RootPanel.Children)
-#pragma warning restore IDE0007
-                item.Visibility = item.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+            Hide();
+
+            if (new LoginWindow().ShowDialog().Value)
+                Show();
+            else
+                app.Shutdown();
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e)
+        private async Task RefreshNotificationsAsync()
         {
-            Close();
+            Notifications = await DHClient.GetNotificationsAsync();
         }
 
-        private void Minimize_Click(object sender, RoutedEventArgs e)
-        {
-            WindowState = WindowState.Minimized;
-        }
+        protected void RaisePropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

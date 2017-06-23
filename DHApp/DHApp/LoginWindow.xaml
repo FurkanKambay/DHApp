@@ -17,7 +17,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Image Width="48" Source="dhlogo.jpg" />
+            <Image Width="48" Source="Images/DHLogo.jpg" />
             <TextBlock
                 Grid.Column="1"
                 Margin="8,0,0,0"
@@ -60,7 +60,6 @@
                 x:Name="LoginButton"
                 Margin="0,8,0,0"
                 Background="{StaticResource ThemeColor}"
-                Click="Button_Click"
                 Content="Giriş"
                 Foreground="White" />
         </StackPanel>

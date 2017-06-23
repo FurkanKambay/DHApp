@@ -1,5 +1,4 @@
-﻿using DHApp.Properties;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 
 namespace DHApp
@@ -12,18 +11,23 @@ namespace DHApp
 
             TitleGrid.MouseLeftButtonDown += (_, __) => DragMove();
 
-            LoginNameTB.Text = "Microsoft Specialist";
-            PasswordPB.Password = string.Empty;
+            Loaded += async (s, a) => TryLogin(await DHClient.LogInWithCookieAsync(Properties.Settings.Default.Cookie));
+            LoginButton.Click += async (_, __) => TryLogin(await DHClient.LogInAsync(LoginNameTB.Text, PasswordPB.Password));
+
+            Box_TextChanged(this, new RoutedEventArgs()); //UNDONE: LoginButton is still enabled
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private void TryLogin(bool success)
         {
             LoginNameTB.IsEnabled = PasswordPB.IsEnabled = LoginButton.IsEnabled = false;
 
-            if (await DHClient.LoginAsync(LoginNameTB.Text, PasswordPB.Password))
+            if (success)
                 DialogResult = true;
             else
+            {
                 LoginNameTB.IsEnabled = PasswordPB.IsEnabled = LoginButton.IsEnabled = true;
+                PasswordPB.Password = string.Empty;
+            }
         }
 
         private void Box_TextChanged(object sender, RoutedEventArgs e)
@@ -39,7 +43,9 @@ namespace DHApp
             PasswordPB.BorderBrush = isPassOk ? orange : red;
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e) =>
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
             DialogResult = false;
+        }
     }
 }
