@@ -1,13 +1,7 @@
-# DH App
+# DH Bildirim
 
-## TODO:
-- Save cookies to settings and retrieve them on app launch.
-- Notifications: NotifyIcon(System.Windows.Forms) / ToastNotifications(NuGet)
-  - Store old notifications to avoid duplicates.
-  - Background service
+### Giriş:
+![Giriş Ekranı](http://i.imgur.com/p73WAYH.png)
 
-### Login:
-![Login Screen](http://i.imgur.com/ucPKrYo.png)
-
-### Notifications:
-![Notifications](http://i.imgur.com/nFzEQSL.png)
+### Bildirimler:
+![Bildirimler](http://i.imgur.com/o4LJs8i.png)
