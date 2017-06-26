@@ -8,44 +8,51 @@ namespace DHApp
         public LoginWindow()
         {
             InitializeComponent();
+            DataContext = this;
 
             TitleGrid.MouseLeftButtonDown += (_, __) => DragMove();
+            CloseButton.Click += (_, __) => DialogResult = false;
 
-            Loaded += async (s, a) => TryLogin(await DHClient.LogInWithCookieAsync(Properties.Settings.Default.Cookie));
-            LoginButton.Click += async (_, __) => TryLogin(await DHClient.LogInAsync(LoginNameTB.Text, PasswordPB.Password));
-
-            Box_TextChanged(this, new RoutedEventArgs()); //UNDONE: LoginButton is still enabled
-        }
-
-        private void TryLogin(bool success)
-        {
-            LoginNameTB.IsEnabled = PasswordPB.IsEnabled = LoginButton.IsEnabled = false;
-
-            if (success)
-                DialogResult = true;
-            else
+            void tryToLogIn(bool success)
             {
-                LoginNameTB.IsEnabled = PasswordPB.IsEnabled = LoginButton.IsEnabled = true;
-                PasswordPB.Password = string.Empty;
+                if (success)
+                    DialogResult = true;
+                else
+                {
+                    LoginPanel.IsEnabled = true;
+                    //PasswordPB.Password = string.Empty;
+                }
             }
+
+            Loaded += (_, __) =>
+            {
+                LoginPanel.IsEnabled = false;
+                tryToLogIn(DHClient.LogInWithCookie(Properties.Settings.Default.Cookie));
+            };
+
+            LoginButton.Click += async (_, __) =>
+            {
+                LoginPanel.IsEnabled = false;
+                tryToLogIn(await DHClient.LogInAsync(UsernameTB.Text, PasswordPB.Password));
+            };
+
+            UsernameTB.Text = "Specialist.";
+            PasswordPB.Password = "E1Vp!a}<9B8x6^.2"; //TODO: remove
+
+            Box_TextChanged(this, new RoutedEventArgs());
         }
 
         private void Box_TextChanged(object sender, RoutedEventArgs e)
         {
-            bool isNameOk = !string.IsNullOrWhiteSpace(LoginNameTB.Text);
+            bool isNameOk = !string.IsNullOrWhiteSpace(UsernameTB.Text);
             bool isPassOk = !string.IsNullOrWhiteSpace(PasswordPB.Password);
 
             LoginButton.IsEnabled = isNameOk && isPassOk;
 
             var orange = new SolidColorBrush(Colors.DarkOrange);
             var red = new SolidColorBrush(Colors.Red);
-            LoginNameTB.BorderBrush = isNameOk ? orange : red;
+            UsernameTB.BorderBrush = isNameOk ? orange : red;
             PasswordPB.BorderBrush = isPassOk ? orange : red;
-        }
-
-        private void Close_Click(object sender, RoutedEventArgs e)
-        {
-            DialogResult = false;
         }
     }
 }

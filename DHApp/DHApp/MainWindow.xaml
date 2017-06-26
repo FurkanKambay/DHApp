@@ -5,7 +5,6 @@
     xmlns:local="clr-namespace:DHApp"
     Width="480"
     FontSize="16"
-    Loaded="WindowLoaded"
     ResizeMode="NoResize"
     SizeToContent="Height"
     WindowStartupLocation="CenterScreen"
@@ -38,28 +37,22 @@
                 Foreground="White" />
         </Grid>
         <StackPanel Grid.Row="1" Margin="4">
-            <Button
-                x:Name="UserButton"
-                HorizontalAlignment="Center"
-                Background="Transparent">
-                <Button.ContextMenu>
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <StackPanel.ContextMenu>
                     <ContextMenu>
                         <MenuItem Click="LogoutClicked" Header="Çıkış yap" />
-                        <!--  TODO: icon, action  -->
                     </ContextMenu>
-                </Button.ContextMenu>
-                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                    <Image
-                        x:Name="Avatar"
-                        Width="24"
-                        Source="Images/DefaultAvatar.gif" />
-                    <TextBlock
-                        x:Name="UsernameText"
-                        Margin="4"
-                        HorizontalAlignment="Center"
-                        Foreground="{StaticResource ThemeColor}" />
-                </StackPanel>
-            </Button>
+                </StackPanel.ContextMenu>
+                <Image
+                    x:Name="Avatar"
+                    Width="24"
+                    Source="Images/DefaultAvatar.gif" />
+                <TextBlock
+                    x:Name="UsernameText"
+                    Margin="4"
+                    HorizontalAlignment="Center"
+                    Foreground="{StaticResource ThemeColor}" />
+            </StackPanel>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -67,16 +60,15 @@
                 </Grid.ColumnDefinitions>
                 <Button
                     x:Name="RefreshButton"
-                    Margin="0,0,4,0"
+                    Margin="4"
                     Background="{StaticResource ThemeColor}"
                     Click="RefreshClicked"
                     Content="Yenile"
-                    Foreground="White"
-                    OpacityMask="{DynamicResource ThemeColor}" />
+                    Foreground="White" />
                 <Button
                     x:Name="IgnoreButton"
                     Grid.Column="1"
-                    Margin="4,0,0,0"
+                    Margin="4"
                     Background="{StaticResource ThemeColor}"
                     Click="IgnoreClicked"
                     Content="Bildirimleri Yoksay"
@@ -84,7 +76,6 @@
             </Grid>
             <ListView
                 x:Name="NotificationList"
-                Cursor="Hand"
                 FontSize="12"
                 ItemsSource="{Binding Notifications}">
                 <ListView.ItemTemplate>

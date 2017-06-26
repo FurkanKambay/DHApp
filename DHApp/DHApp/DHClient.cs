@@ -1,5 +1,6 @@
 ﻿using HtmlAgilityPack;
 using RestSharp;
+using RestSharp.Extensions.MonoHttp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,8 +19,8 @@ namespace DHApp
         public static string AvatarUrl { get; private set; }
         public static bool IsLoggedIn { get; private set; }
 
-        public static event Action<string> LoggedIn;
-        public static event Action LoggedOut;
+        public static event Action<string> Login;
+        public static event Action Logout;
 
         private static RestClient client = new RestClient
         {
@@ -36,7 +37,6 @@ namespace DHApp
 
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                 return false;
-
 
             var response = await client.ExecutePostTaskAsync(
                 new RestRequest(loginPath)
@@ -55,15 +55,14 @@ namespace DHApp
 
                 if (doc.DocumentNode.ChildNodes["html"]?.Name == "html")
                 {
-                    string cookie = GetLoginCookie(client.CookieContainer.GetCookieHeader(new Uri(forumUrl)));
+                    string encryptedCookie = GetLoginCookie(client.CookieContainer.GetCookieHeader(new Uri(forumUrl)));
 
-                    Username = GetUserNameDecoded(cookie);
-                    AvatarUrl = await GetAvatarUrlAsync(Username);
+                    Username = GetUserNameDecoded(encryptedCookie);
                     IsLoggedIn = true;
 
-                    LoggedIn?.Invoke(Convert.ToBase64String(
+                    Login?.Invoke(Convert.ToBase64String(
                         ProtectedData.Protect(
-                            Encoding.ASCII.GetBytes(cookie),
+                            Encoding.ASCII.GetBytes(encryptedCookie),
                             Encoding.ASCII.GetBytes(entropy),
                             DataProtectionScope.CurrentUser)));
                 }
@@ -72,7 +71,7 @@ namespace DHApp
             return IsLoggedIn;
         }
 
-        public static async Task<bool> LogInWithCookieAsync(string encryptedCookie)
+        public static bool LogInWithCookie(string encryptedCookie)
         {
             if (IsLoggedIn)
                 throw new InvalidOperationException("Already logged in");
@@ -89,10 +88,9 @@ namespace DHApp
             client.CookieContainer.Add(new Uri(forumUrl), new Cookie(cookieName, cookie));
 
             Username = GetUserNameDecoded(cookie);
-            AvatarUrl = await GetAvatarUrlAsync(Username);
             IsLoggedIn = true;
 
-            LoggedIn?.Invoke(encryptedCookie);
+            Login?.Invoke(encryptedCookie);
             return IsLoggedIn; //TODO: check if login worked
         }
 
@@ -113,7 +111,7 @@ namespace DHApp
             Username = null;
             AvatarUrl = null;
 
-            LoggedOut?.Invoke();
+            Logout?.Invoke();
         }
 
         public static async Task<IEnumerable<DHNotification>> GetNotificationsAsync()
@@ -129,41 +127,31 @@ namespace DHApp
             var htmlDocument = new HtmlDocument();
             htmlDocument.LoadHtml(response.Content);
 
-            //client.BaseUrl = new Uri("https://mobile.donanimhaber.com");
-            //var otherResponse = await client
-            //    .ExecuteTaskAsync(
-            //    new RestRequest("/getNotifications_ajax.asp", Method.GET)
-            //    .AddQueryParameter("mode", "profile")
-            //    .AddQueryParameter("top", "20")
-            //    .AddQueryParameter("n", "1")
-            //    .AddQueryParameter("filter", "6")
-            //    );
-            //string resp = otherResponse.Content;
-
             return htmlDocument
                 .DocumentNode
                 .ChildNodes["div"]
                 .Descendants("a")
-                .Where(a => a.Attributes["class"].Value.Contains("bildirim"))
+                .Where(a => a.Attributes["class"].Value.Contains("bildirim yeni")) //just new ones
                 .Select(a =>
                 {
                     var span = a.ChildNodes["span"];
 
-                    string iconUrl = string.Empty;
-                    string time = "Hata";
+                    string iconUrl = null;
+                    string time = null;
 
-                    if (span != null) //todo: unexpected, might be server-side
+                    if (span != null) // server-side or http request problem
                     {
                         iconUrl = span.ChildNodes["img"].Attributes["src"].Value;
                         time = FixText(span.InnerText);
                         span.Remove();
                     }
 
-                    a.InnerHtml = FixText(a.InnerHtml); //undone: "collection is changed"?
+                    var contentNode = HtmlNode.CreateNode(a.OuterHtml);
+                    contentNode.InnerHtml = FixText(a.InnerHtml);
 
                     return new DHNotification
                     {
-                        Content = a.InnerText, //TODO: <strong> & <i> formatting
+                        Content = contentNode.InnerText, //TODO: <strong> & <i> formatting
                         Time = time,
                         Url = forumUrl + FixText(a.Attributes["href"].Value),
                         IconUrl = iconUrl,
@@ -179,16 +167,19 @@ namespace DHApp
 
             await client.ExecuteGetTaskAsync(new RestRequest(ignoreNotificationsPath));
         }
-        #endregion Public Methods
 
-        #region Private Methods
-        private static async Task<string> GetAvatarUrlAsync(string username)
+        public static async Task<string> GetAvatarUrlAsync(string username = null)
         {
+            if (username == null)
+                username = Username;
+
             var response = await client.ExecuteGetTaskAsync(
                 new RestRequest(getUserAvatarPath).AddQueryParameter("q", username));
 
             var htmlDocument = new HtmlDocument();
             htmlDocument.LoadHtml(response.Content);
+
+            string avatarUrl = null;
 
             foreach (var node in htmlDocument.DocumentNode.Descendants("a"))
             {
@@ -201,21 +192,26 @@ namespace DHApp
                         .Value
                         .Trim('\\', '"');
 
-                    if (url != "\"\"")
-                        return url;
+                    if (!string.IsNullOrWhiteSpace(url) && url != "\"\"")
+                    {
+                        avatarUrl = url;
+                        break;
+                    }
                 }
             }
 
-            return null;
+            return (username == Username)
+                ? AvatarUrl = avatarUrl
+                : avatarUrl;
         }
+        #endregion Public Methods
 
+        #region Private Methods
         private static string FixText(string source, string toRemove = "\n") =>
             WebUtility.HtmlDecode(source.Replace(toRemove, string.Empty).Trim());
 
         private static string GetUserNameDecoded(string sourceCookie) =>
-            WebUtility.HtmlDecode(
-                Regex.Match(sourceCookie, cookiePattern)
-                .Groups[1].Value);
+            HttpUtility.UrlDecode(Regex.Match(sourceCookie, cookiePattern).Groups[1].Value);
 
         private static string GetLoginCookie(string cookies) =>
             cookies.Split(';')

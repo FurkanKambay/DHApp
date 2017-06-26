@@ -25,22 +25,28 @@
                 Foreground="White"
                 Text="Donanım Haber Giriş" />
             <Button
+                x:Name="CloseButton"
                 Grid.Column="2"
                 Width="32"
                 Height="32"
                 Margin="0,0,4,0"
-                Background="Transparent"
+                Background="#22000000"
                 BorderThickness="0"
-                Click="Close_Click"
                 Content="&#xE894;"
                 FontFamily="Segoe MDL2 Assets"
-                Foreground="White" />
+                Foreground="White">
+                <Button.FocusVisualStyle>
+                    <Style />
+                </Button.FocusVisualStyle>
+            </Button>
         </Grid>
-        <StackPanel Margin="8">
+        <StackPanel
+            x:Name="LoginPanel"
+            Width="240"
+            Margin="8">
             <TextBlock Foreground="{StaticResource ThemeColor}" Text="Kullanıcı Adı:" />
             <TextBox
-                x:Name="LoginNameTB"
-                Width="240"
+                x:Name="UsernameTB"
                 Margin="0,4,0,0"
                 BorderThickness="2"
                 SelectionBrush="{StaticResource ThemeColor}"
@@ -51,7 +57,6 @@
                 Text="Şifre:" />
             <PasswordBox
                 x:Name="PasswordPB"
-                Width="240"
                 Margin="0,4,0,0"
                 BorderThickness="2"
                 PasswordChanged="Box_TextChanged"
