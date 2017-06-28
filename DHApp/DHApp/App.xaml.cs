@@ -64,7 +64,10 @@ namespace DHApp
         public void StartBackgroundWorker()
         {
             if (MainWindow == null)
+            {
+                Logger.Log("Couldn't start background worker");
                 throw new InvalidOperationException("App.MainWindow must not be null.");
+            }
 
             lastNotifications = MainWindow.Notifications;
 
@@ -79,7 +82,7 @@ namespace DHApp
         public void StopBackgroundWorker()
         {
             timer.Stop();
-            notifier.Dispose();
+            notifier?.Dispose();
             trayIcon.Visible = false;
             MainWindow.PropertyChanged -= NewNotificationArrived;
 
@@ -89,7 +92,10 @@ namespace DHApp
         public void ShowNotification(DHNotification notification)
         {
             if (!trayIcon.Visible)
+            {
+                Logger.Log("Couldn't show notification");
                 throw new InvalidOperationException("Tray icon is not visible");
+            }
 
             notifier.ShowNotification(notification);
 
@@ -99,7 +105,10 @@ namespace DHApp
         public void ShowMessage(string message)
         {
             if (!trayIcon.Visible)
+            {
+                Logger.Log("Couldn't show message");
                 throw new InvalidOperationException();
+            }
 
             notifier.ShowMessage(message);
 
@@ -110,6 +119,7 @@ namespace DHApp
         #region Private Methods
         private void InitializeNotifier()
         {
+            notifier?.Dispose();
             notifier = new Notifier(cfg =>
             {
                 cfg.PositionProvider = new PrimaryScreenPositionProvider(

@@ -1,7 +1,10 @@
 # DH Bildirim
 
-### Giriş:
-![Giriş Ekranı](http://i.imgur.com/p73WAYH.png)
+### Giriş Ekranı:
+![Giriş Ekranı](http://i.imgur.com/2XQcfwx.png)
+
+### Bildirim Ekranı:
+![Bildirim Ekranı](http://i.imgur.com/eUPTEWe.png)
 
 ### Bildirimler:
-![Bildirimler](http://i.imgur.com/o4LJs8i.png)
+![Bildirimler](http://i.imgur.com/VneXRpL.png)
