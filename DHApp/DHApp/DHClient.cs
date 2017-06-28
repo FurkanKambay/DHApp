@@ -131,7 +131,8 @@ namespace DHApp
                 .DocumentNode
                 .ChildNodes["div"]
                 .Descendants("a")
-                .Where(a => a.Attributes["class"].Value.Contains("bildirim yeni")) //just new ones
+                .Where(a => a.Attributes["class"].Value.Contains("bildirim"))
+                .ToList()
                 .Select(a =>
                 {
                     var span = a.ChildNodes["span"];
@@ -139,19 +140,19 @@ namespace DHApp
                     string iconUrl = null;
                     string time = null;
 
-                    if (span != null) // server-side or http request problem
+                    if (span != null) //BUG: Server-side error or HTTP request problem
                     {
                         iconUrl = span.ChildNodes["img"].Attributes["src"].Value;
                         time = FixText(span.InnerText);
                         span.Remove();
                     }
 
-                    var contentNode = HtmlNode.CreateNode(a.OuterHtml);
-                    contentNode.InnerHtml = FixText(a.InnerHtml);
+                    var node = HtmlNode.CreateNode(a.OuterHtml);
+                    node.InnerHtml = FixText(node.InnerHtml);
 
                     return new DHNotification
                     {
-                        Content = contentNode.InnerText, //TODO: <strong> & <i> formatting
+                        Content = node.InnerText, //TODO: <strong> & <i> formatting
                         Time = time,
                         Url = forumUrl + FixText(a.Attributes["href"].Value),
                         IconUrl = iconUrl,
@@ -180,7 +181,6 @@ namespace DHApp
             htmlDocument.LoadHtml(response.Content);
 
             string avatarUrl = null;
-
             foreach (var node in htmlDocument.DocumentNode.Descendants("a"))
             {
                 if (FixText(node.InnerText, "\\n") == username)

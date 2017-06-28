@@ -4,6 +4,9 @@ using System.Linq;
 using System.Reflection;
 using System.Timers;
 using System.Windows;
+using ToastNotifications;
+using ToastNotifications.Lifetime;
+using ToastNotifications.Position;
 using Forms = System.Windows.Forms;
 
 namespace DHApp
@@ -12,9 +15,12 @@ namespace DHApp
     {
         public new MainWindow MainWindow;
 
-        private IEnumerable<DHNotification> lastNotifications;
+        private Notifier notifier;
         private Forms.NotifyIcon trayIcon;
+
+        private IEnumerable<DHNotification> lastNotifications;
         private Timer timer;
+        private const int notificationTimeout = 3000;
 
         public App()
         {
@@ -22,6 +28,20 @@ namespace DHApp
             timer.Elapsed += async (s, a) => MainWindow.Notifications = await DHClient.GetNotificationsAsync();
 
             lastNotifications = Enumerable.Empty<DHNotification>();
+
+            notifier = new Notifier(cfg =>
+            {
+                cfg.PositionProvider = new PrimaryScreenPositionProvider(
+                    Corner.TopRight, 10, 10);
+
+                cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(
+                    TimeSpan.FromSeconds(5),
+                    MaximumNotificationCount.FromCount(5));
+
+                cfg.Dispatcher = Current.Dispatcher;
+
+                cfg.DisplayOptions.Width = 360;
+            });
 
             trayIcon = new Forms.NotifyIcon
             {
@@ -36,14 +56,17 @@ namespace DHApp
                 })
             };
 
-            trayIcon.DoubleClick += async (s, a) =>
+            trayIcon.MouseDoubleClick += async (s, args) =>
             {
-                StopBackgroundWorker();
-                MainWindow.Show();
-                MainWindow.Notifications = await DHClient.GetNotificationsAsync();
-            };
+                if (args.Button == Forms.MouseButtons.Left)
+                {
+                    StopBackgroundWorker();
 
-            Logger.Log("Tray icon initialized");
+                    MainWindow.Notifications = await DHClient.GetNotificationsAsync();
+                    MainWindow.Show();
+                    MainWindow.Activate();
+                }
+            };
 
             Exit += (s, a) => Logger.Log("Application exit");
         }
@@ -77,31 +100,17 @@ namespace DHApp
             if (!trayIcon.Visible)
                 throw new InvalidOperationException("Tray icon is not visible");
 
-            //BUG: doesn't happen per-notification. also happens when user clicks on tray icon
-            //TODO: use another library. (NuGet)
-            void clickAction(object s, EventArgs a)
-            {
-                trayIcon.BalloonTipClicked -= clickAction;
-                System.Diagnostics.Process.Start(notification.Url);
-            }
-
-            trayIcon.BalloonTipClicked += clickAction;
-
-            trayIcon.ShowBalloonTip(
-                notificationTimeout,
-                notification.Content,
-                notification.Time ?? "Zaman hatalı",
-                Forms.ToolTipIcon.None);
+            notifier.ShowNotification(notification);
 
             Logger.Log("Showed notification");
         }
 
-        public void ShowInformation(string title, string content)
+        public void ShowMessage(string message)
         {
             if (!trayIcon.Visible)
                 throw new InvalidOperationException();
 
-            trayIcon.ShowBalloonTip(notificationTimeout, title, content, Forms.ToolTipIcon.Info);
+            notifier.ShowMessage(message);
 
             Logger.Log("Showed information");
         }
@@ -109,21 +118,19 @@ namespace DHApp
 
         private void NewNotificationArrived(object sender, System.ComponentModel.PropertyChangedEventArgs args)
         {
-            if (args.PropertyName != "Notifications")
-                throw new InvalidOperationException();
+            if (args.PropertyName == nameof(MainWindow.Notifications))
+            {
+                var currentNotifications = MainWindow.Notifications.Where(n => n.IsNew);
+                var newNotifications = currentNotifications.Except(lastNotifications);
 
-            var currentNotifications = MainWindow.Notifications;
-            var newlyAddedNotifications = currentNotifications.Except(lastNotifications);
+                if (newNotifications.Any())
+                    Logger.Log("New notification(s) arrived");
 
-            if (newlyAddedNotifications.Any(n => n.IsNew))
-                Logger.Log("New notification(s) arrived");
+                foreach (var notification in newNotifications)
+                    ShowNotification(notification);
 
-            foreach (var notification in newlyAddedNotifications)
-                ShowNotification(notification);
-
-            lastNotifications = currentNotifications;
+                lastNotifications = currentNotifications;
+            }
         }
-
-        private const int notificationTimeout = 3000;
     }
 }

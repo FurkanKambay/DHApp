@@ -20,24 +20,22 @@ namespace DHApp
                 else
                 {
                     LoginPanel.IsEnabled = true;
-                    //PasswordPB.Password = string.Empty;
+                    PasswordPB.Password = string.Empty;
+                    PasswordPB.Focus();
                 }
             }
 
-            Loaded += (_, __) =>
+            Loaded += (s, a) =>
             {
                 LoginPanel.IsEnabled = false;
                 tryToLogIn(DHClient.LogInWithCookie(Properties.Settings.Default.Cookie));
             };
 
-            LoginButton.Click += async (_, __) =>
+            LoginButton.Click += async (s, a) =>
             {
                 LoginPanel.IsEnabled = false;
                 tryToLogIn(await DHClient.LogInAsync(UsernameTB.Text, PasswordPB.Password));
             };
-
-            UsernameTB.Text = "Specialist.";
-            PasswordPB.Password = "E1Vp!a}<9B8x6^.2"; //TODO: remove
 
             Box_TextChanged(this, new RoutedEventArgs());
         }
@@ -49,7 +47,7 @@ namespace DHApp
 
             LoginButton.IsEnabled = isNameOk && isPassOk;
 
-            var orange = new SolidColorBrush(Colors.DarkOrange);
+            var orange = FindResource("ThemeColor") as Brush;
             var red = new SolidColorBrush(Colors.Red);
             UsernameTB.BorderBrush = isNameOk ? orange : red;
             PasswordPB.BorderBrush = isPassOk ? orange : red;

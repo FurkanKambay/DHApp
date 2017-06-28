@@ -5,6 +5,11 @@
     ShutdownMode="OnExplicitShutdown"
     StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <SolidColorBrush x:Key="ThemeColor" Color="#FFFE7523" />
+        <ResourceDictionary>
+            <SolidColorBrush x:Key="ThemeColor" Color="#FFFE7523" />
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/ToastNotifications.Messages;component/Themes/Default.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

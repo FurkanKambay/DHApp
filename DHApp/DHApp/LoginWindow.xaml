@@ -5,6 +5,7 @@
     FontSize="16"
     ResizeMode="NoResize"
     SizeToContent="WidthAndHeight"
+    Topmost="True"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None">
     <Window.Effect>
@@ -34,11 +35,7 @@
                 BorderThickness="0"
                 Content="&#xE894;"
                 FontFamily="Segoe MDL2 Assets"
-                Foreground="White">
-                <Button.FocusVisualStyle>
-                    <Style />
-                </Button.FocusVisualStyle>
-            </Button>
+                Foreground="White" />
         </Grid>
         <StackPanel
             x:Name="LoginPanel"

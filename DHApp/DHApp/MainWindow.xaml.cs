@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,7 +17,6 @@ namespace DHApp
         #region Properties and Fields
         private static App app = (App)Application.Current;
 
-        public event PropertyChangedEventHandler PropertyChanged;
         private IEnumerable<DHNotification> notifications;
         public IEnumerable<DHNotification> Notifications
         {
@@ -25,10 +26,26 @@ namespace DHApp
                 if (notifications != value)
                 {
                     notifications = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Notifications)));
+                    OnPropertyChanged();
                 }
             }
         }
+
+        private bool canOperate;
+        public bool CanOperate
+        {
+            get => canOperate;
+            set
+            {
+                canOperate = value;
+                OnPropertyChanged();
+            }
+        }
+
+        protected virtual void OnPropertyChanged([CallerMemberName]string propertyName = null) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        public event PropertyChangedEventHandler PropertyChanged;
         #endregion Properties and Fields
 
         public MainWindow()
@@ -39,9 +56,7 @@ namespace DHApp
             DataContext = this;
 
             TitleGrid.MouseLeftButtonDown += (_, __) => DragMove();
-
-            Activated += WindowActivated;
-            Deactivated += WindowDeactivated;
+            Activated += async (s, a) => await RefreshNotificationsAsync();
 
             DHClient.Login += OnDHLogin;
             DHClient.Logout += OnDHLogout;
@@ -75,23 +90,10 @@ namespace DHApp
 
             Logger.Log("Logged out");
 
-            NotificationList.ItemsSource = null;
+            Notifications = null;
             ShowLoginWindow();
         }
         #endregion DH Events
-
-        #region Window Events
-        private async void WindowActivated(object sender, EventArgs e)
-        {
-            await RefreshNotificationsAsync();
-            app.StopBackgroundWorker();
-        }
-
-        private void WindowDeactivated(object sender, EventArgs e)
-        {
-            SendToBackground();
-        }
-        #endregion Window Events
 
         #region Click Events
         private async void RefreshClicked(object sender, RoutedEventArgs e)
@@ -101,13 +103,18 @@ namespace DHApp
 
         private async void IgnoreClicked(object sender, RoutedEventArgs e)
         {
+            CanOperate = false;
+
             await DHClient.IgnoreNotificationsAsync();
-            Notifications = null;
             Logger.Log("Ignored notifications");
+            Notifications = null;
+
+            CanOperate = true;
         }
 
-        private async void LogoutClicked(object sender, RoutedEventArgs e)
+        private async void LogOutClicked(object sender, RoutedEventArgs e)
         {
+            CanOperate = false;
             await DHClient.LogOutAsync();
         }
 
@@ -116,10 +123,13 @@ namespace DHApp
             SendToBackground();
         }
 
-        private void NotificationClicked(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private async void NotificationClicked(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (sender is ListViewItem item && item.IsSelected && item.Content is DHNotification notification)
-                System.Diagnostics.Process.Start(notification.Url);
+            {
+                Process.Start(notification.Url);
+                await RefreshNotificationsAsync();
+            }
         }
         #endregion Click Events
 
@@ -137,16 +147,15 @@ namespace DHApp
         private void SendToBackground()
         {
             app.StartBackgroundWorker();
-            app.ShowInformation(
-                "Program arka planda çalışmaya devam ediyor.",
-                "Yeni bildirimlerden haberdar edileceksiniz.");
-
+            app.ShowMessage("Program arka planda çalışmaya devam ediyor. Yeni bildirimlerden haberdar edileceksiniz.");
             Hide();
         }
 
         private async Task RefreshNotificationsAsync()
         {
+            CanOperate = false;
             Notifications = await DHClient.GetNotificationsAsync();
+            CanOperate = true;
         }
         #endregion Methods
     }

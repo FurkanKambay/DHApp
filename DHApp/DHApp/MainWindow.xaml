@@ -7,6 +7,8 @@
     FontSize="16"
     ResizeMode="NoResize"
     SizeToContent="Height"
+    SnapsToDevicePixels="True"
+    Topmost="True"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None">
     <StackPanel>
@@ -29,7 +31,7 @@
                 Width="32"
                 Height="32"
                 Margin="0,0,4,0"
-                Background="{StaticResource ThemeColor}"
+                Background="#22000000"
                 BorderThickness="0"
                 Click="CloseClicked"
                 Content="&#xE894;"
@@ -40,7 +42,10 @@
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                 <StackPanel.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Click="LogoutClicked" Header="Çıkış yap" />
+                        <MenuItem
+                            Click="LogOutClicked"
+                            Header="Çıkış yap"
+                            IsEnabled="{Binding CanOperate}" />
                     </ContextMenu>
                 </StackPanel.ContextMenu>
                 <Image
@@ -64,7 +69,8 @@
                     Background="{StaticResource ThemeColor}"
                     Click="RefreshClicked"
                     Content="Yenile"
-                    Foreground="White" />
+                    Foreground="White"
+                    IsEnabled="{Binding CanOperate}" />
                 <Button
                     x:Name="IgnoreButton"
                     Grid.Column="1"
@@ -72,10 +78,12 @@
                     Background="{StaticResource ThemeColor}"
                     Click="IgnoreClicked"
                     Content="Bildirimleri Yoksay"
-                    Foreground="White" />
+                    Foreground="White"
+                    IsEnabled="{Binding CanOperate}" />
             </Grid>
             <ListView
                 x:Name="NotificationList"
+                Cursor="Hand"
                 FontSize="12"
                 ItemsSource="{Binding Notifications}">
                 <ListView.ItemTemplate>
