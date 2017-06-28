@@ -13,14 +13,16 @@ namespace DHApp
 {
     public partial class App : Application
     {
+        #region Fields
+        private const int notificationTimeout = 3000;
+        private Timer timer;
+
         public new MainWindow MainWindow;
+        private IEnumerable<DHNotification> lastNotifications;
 
         private Notifier notifier;
         private Forms.NotifyIcon trayIcon;
-
-        private IEnumerable<DHNotification> lastNotifications;
-        private Timer timer;
-        private const int notificationTimeout = 3000;
+        #endregion Fields
 
         public App()
         {
@@ -29,30 +31,12 @@ namespace DHApp
 
             lastNotifications = Enumerable.Empty<DHNotification>();
 
-            notifier = new Notifier(cfg =>
-            {
-                cfg.PositionProvider = new PrimaryScreenPositionProvider(
-                    Corner.TopRight, 10, 10);
-
-                cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(
-                    TimeSpan.FromSeconds(5),
-                    MaximumNotificationCount.FromCount(5));
-
-                cfg.Dispatcher = Current.Dispatcher;
-
-                cfg.DisplayOptions.Width = 360;
-            });
-
             trayIcon = new Forms.NotifyIcon
             {
                 Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location),
                 ContextMenu = new Forms.ContextMenu(new Forms.MenuItem[]
                 {
-                    new Forms.MenuItem("Çıkış", new EventHandler((s, a) =>
-                    {
-                        trayIcon.Visible = false;
-                        Current.Shutdown();
-                    }))
+                    new Forms.MenuItem("Çıkış", new EventHandler((s, a) => Current.Shutdown()))
                 })
             };
 
@@ -68,7 +52,12 @@ namespace DHApp
                 }
             };
 
-            Exit += (s, a) => Logger.Log("Application exit");
+            Exit += (s, a) =>
+            {
+                trayIcon.Visible = false;
+                notifier.Dispose();
+                Logger.Log("Application exit");
+            };
         }
 
         #region Public Methods
@@ -81,6 +70,7 @@ namespace DHApp
 
             MainWindow.PropertyChanged += NewNotificationArrived;
             trayIcon.Visible = true;
+            InitializeNotifier();
             timer.Start();
 
             Logger.Log("Background worker started");
@@ -89,6 +79,7 @@ namespace DHApp
         public void StopBackgroundWorker()
         {
             timer.Stop();
+            notifier.Dispose();
             trayIcon.Visible = false;
             MainWindow.PropertyChanged -= NewNotificationArrived;
 
@@ -116,6 +107,24 @@ namespace DHApp
         }
         #endregion Public Methods
 
+        #region Private Methods
+        private void InitializeNotifier()
+        {
+            notifier = new Notifier(cfg =>
+            {
+                cfg.PositionProvider = new PrimaryScreenPositionProvider(
+                    Corner.TopRight, 16, 16);
+
+                cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(
+                    TimeSpan.FromSeconds(5),
+                    MaximumNotificationCount.FromCount(5));
+
+                cfg.Dispatcher = Current.Dispatcher;
+
+                cfg.DisplayOptions.Width = 360;
+            });
+        }
+
         private void NewNotificationArrived(object sender, System.ComponentModel.PropertyChangedEventArgs args)
         {
             if (args.PropertyName == nameof(MainWindow.Notifications))
@@ -132,5 +141,6 @@ namespace DHApp
                 lastNotifications = currentNotifications;
             }
         }
+        #endregion Private Methods
     }
 }

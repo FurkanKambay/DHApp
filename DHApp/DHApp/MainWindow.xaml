@@ -83,13 +83,16 @@
             </Grid>
             <ListView
                 x:Name="NotificationList"
+                HorizontalContentAlignment="Stretch"
+                BorderThickness="0"
                 Cursor="Hand"
                 FontSize="12"
-                ItemsSource="{Binding Notifications}">
+                ItemsSource="{Binding Notifications}"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListView.ItemTemplate>
                     <DataTemplate DataType="local:DHNotifications">
                         <StackPanel>
-                            <TextBlock Text="{Binding Content}" />
+                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap" />
                             <StackPanel Orientation="Horizontal">
                                 <Image Source="{Binding IconUrl}" />
                                 <TextBlock Margin="4,0,0,0" Text="{Binding Time}" />

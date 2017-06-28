@@ -7,12 +7,12 @@ using System.Windows;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DH App")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("DH Bildirim")]
+[assembly: AssemblyDescription("Donanım Haber Forum bildirimlerinden haberdar eder")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("DH App")]
-[assembly: AssemblyCopyright("Copyright ©  2017")]
+[assembly: AssemblyCompany("Furkan Kambay")]
+[assembly: AssemblyProduct("DH Bildirim")]
+[assembly: AssemblyCopyright("Copyright ©  2017 - Microsoft Specialist")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -53,3 +53,5 @@ using System.Windows;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: NeutralResourcesLanguage("tr")]
+

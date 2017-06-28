@@ -29,6 +29,7 @@ namespace DHApp
             {
                 LoginPanel.IsEnabled = false;
                 tryToLogIn(DHClient.LogInWithCookie(Properties.Settings.Default.Cookie));
+                UsernameTB.Focus();
             };
 
             LoginButton.Click += async (s, a) =>
