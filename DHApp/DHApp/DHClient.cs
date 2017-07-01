@@ -85,6 +85,9 @@ namespace DHApp
                         Encoding.ASCII.GetBytes(entropy),
                         DataProtectionScope.CurrentUser)));
 
+            if (string.IsNullOrEmpty(cookie))
+                throw new InvalidOperationException("Cookies are corrupt");
+
             client.CookieContainer.Add(new Uri(forumUrl), new Cookie(cookieName, cookie));
 
             Username = GetUserNameDecoded(cookie);
@@ -121,6 +124,14 @@ namespace DHApp
 
             var response = await client.ExecuteGetTaskAsync(new RestRequest(getNotificationsPath));
 
+            //var altResponse = await client.ExecuteGetTaskAsync(
+            //    new RestRequest("/getNotifications_ajax.asp")
+            //    .AddQueryParameter("mode", "profile")
+            //    .AddQueryParameter("top", "20")
+            //    .AddQueryParameter("n", "1")
+            //    .AddQueryParameter("filter", "6"));
+            //string altContent = altResponse.Content;
+
             if (response.StatusCode != HttpStatusCode.OK)
                 return null;
 
@@ -135,24 +146,25 @@ namespace DHApp
                 .ToList()
                 .Select(a =>
                 {
-                    var span = a.ChildNodes["span"];
-
                     string iconUrl = null;
                     string time = null;
 
-                    if (span != null) //BUG: Server-side error or HTTP request problem
+                    //BUG: Server-side error or HTTP request problem. Use alternative request up there ^
+                    var span = a.Descendants("node").SingleOrDefault();
+                    if (span != null)
                     {
                         iconUrl = span.ChildNodes["img"].Attributes["src"].Value;
                         time = FixText(span.InnerText);
-                        span.Remove();
-                    }
 
-                    var node = HtmlNode.CreateNode(a.OuterHtml);
-                    node.InnerHtml = FixText(node.InnerHtml);
+                        if (a.ChildNodes.Contains(span))
+                            a.RemoveChild(span);
+                        else
+                            throw new ArgumentOutOfRangeException(nameof(span));
+                    }
 
                     return new DHNotification
                     {
-                        Content = node.InnerText, //TODO: <strong> & <i> formatting
+                        Content = FixText(a.InnerHtml),
                         Time = time,
                         Url = forumUrl + FixText(a.Attributes["href"].Value),
                         IconUrl = iconUrl,
@@ -214,16 +226,13 @@ namespace DHApp
             HttpUtility.UrlDecode(Regex.Match(sourceCookie, cookiePattern).Groups[1].Value);
 
         private static string GetLoginCookie(string cookies) =>
-            cookies.Split(';')
-            .SingleOrDefault(c => c.Contains(cookieName))
-            ?.Replace(cookieName + "=", string.Empty)
-            .Trim() ?? cookies;
+            Regex.Match(cookies, cookiePattern).Value;
         #endregion Private Methods
 
         #region Constants
         private const string entropy = "[sm=dont.gif]";
-        private const string cookiePattern = "^Login=(.+)&Password=.+$";
         private const string cookieName = "db4655ASPplayground%5Fforum";
+        private const string cookiePattern = "Login=(.+)&Password=.+";
         private const string forumUrl = "https://forum.donanimhaber.com";
         private const string loginPath = "/Login";
         private const string logoutPath = "/Logout";

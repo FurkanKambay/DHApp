@@ -16,7 +16,7 @@ namespace DHApp
 
         private void NotificationClicked(object sender, MouseButtonEventArgs e)
         {
-            if (_notification.Url != null)
+            if (!string.IsNullOrWhiteSpace(_notification.Url))
                 Process.Start(_notification.Url);
         }
 

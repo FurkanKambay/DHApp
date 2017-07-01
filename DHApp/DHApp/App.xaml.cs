@@ -26,7 +26,7 @@ namespace DHApp
 
         public App()
         {
-            timer = new Timer(1000 * 10 * 1);
+            timer = new Timer(1000 * 30); // 10 = seconds
             timer.Elapsed += async (s, a) => MainWindow.Notifications = await DHClient.GetNotificationsAsync();
 
             lastNotifications = Enumerable.Empty<DHNotification>();
@@ -46,9 +46,9 @@ namespace DHApp
                 {
                     StopBackgroundWorker();
 
-                    MainWindow.Notifications = await DHClient.GetNotificationsAsync();
                     MainWindow.Show();
                     MainWindow.Activate();
+                    MainWindow.Notifications = await DHClient.GetNotificationsAsync();
                 }
             };
 
@@ -89,30 +89,22 @@ namespace DHApp
             Logger.Log("Background worker stopped");
         }
 
-        public void ShowNotification(DHNotification notification)
+        public void ShowNotification(DHNotification notification) =>
+            ShowMessage(notification.Content, notification.Url);
+
+        public void ShowMessage(string message, string url = null)
         {
+            string messageType = (url == null) ? "message" : "notification";
+
             if (!trayIcon.Visible)
             {
-                Logger.Log("Couldn't show notification");
+                Logger.Log("Couldn't show " + messageType);
                 throw new InvalidOperationException("Tray icon is not visible");
             }
 
-            notifier.ShowNotification(notification);
+            notifier.ShowMessage(message, url);
 
-            Logger.Log("Showed notification");
-        }
-
-        public void ShowMessage(string message)
-        {
-            if (!trayIcon.Visible)
-            {
-                Logger.Log("Couldn't show message");
-                throw new InvalidOperationException();
-            }
-
-            notifier.ShowMessage(message);
-
-            Logger.Log("Showed information");
+            Logger.Log("Showed " + messageType);
         }
         #endregion Public Methods
 

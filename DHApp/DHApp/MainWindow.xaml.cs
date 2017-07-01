@@ -56,7 +56,6 @@ namespace DHApp
             DataContext = this;
 
             TitleGrid.MouseLeftButtonDown += (_, __) => DragMove();
-            Activated += async (s, a) => await RefreshNotificationsAsync();
 
             DHClient.Login += OnDHLogin;
             DHClient.Logout += OnDHLogout;
@@ -72,9 +71,8 @@ namespace DHApp
 
             UsernameText.Text = DHClient.Username;
 
-            string avatarUrl = await DHClient.GetAvatarUrlAsync();
-            if (!string.IsNullOrWhiteSpace(avatarUrl))
-                Avatar.Source = new BitmapImage(new Uri(avatarUrl));
+            if (!string.IsNullOrWhiteSpace(await DHClient.GetAvatarUrlAsync()))
+                Avatar.Source = new BitmapImage(new Uri(DHClient.AvatarUrl));
 
             Logger.Log("Logged in");
 
