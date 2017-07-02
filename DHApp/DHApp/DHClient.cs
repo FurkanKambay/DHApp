@@ -80,7 +80,7 @@ namespace DHApp
                 return false;
 
             string cookie = GetLoginCookie(Encoding.ASCII.GetString(
-                    ProtectedData.Unprotect(
+                ProtectedData.Unprotect(
                         Convert.FromBase64String(encryptedCookie),
                         Encoding.ASCII.GetBytes(entropy),
                         DataProtectionScope.CurrentUser)));
@@ -88,13 +88,24 @@ namespace DHApp
             if (string.IsNullOrEmpty(cookie))
                 throw new InvalidOperationException("Cookies are corrupt");
 
+            //TODO: check if login worked
+
+            //var response = await client.ExecuteGetTaskAsync(
+            //    new RestRequest(getNotificationsPath).AddCookie(cookieName, cookie));
+
+            //var htmlDoc = new HtmlDocument();
+            //htmlDoc.LoadHtml(response.Content);
+
+            //if (htmlDoc.DocumentNode.ChildNodes.Count < 1)
+            //    return false;
+
             client.CookieContainer.Add(new Uri(forumUrl), new Cookie(cookieName, cookie));
 
             Username = GetUserNameDecoded(cookie);
             IsLoggedIn = true;
 
             Login?.Invoke(encryptedCookie);
-            return IsLoggedIn; //TODO: check if login worked
+            return IsLoggedIn;
         }
 
         public static async Task LogOutAsync()
@@ -150,7 +161,7 @@ namespace DHApp
                     string time = null;
 
                     //BUG: Server-side error or HTTP request problem. Use alternative request up there ^
-                    var span = a.Descendants("node").SingleOrDefault();
+                    var span = a.Descendants("span").SingleOrDefault();
                     if (span != null)
                     {
                         iconUrl = span.ChildNodes["img"].Attributes["src"].Value;
@@ -158,8 +169,6 @@ namespace DHApp
 
                         if (a.ChildNodes.Contains(span))
                             a.RemoveChild(span);
-                        else
-                            throw new ArgumentOutOfRangeException(nameof(span));
                     }
 
                     return new DHNotification

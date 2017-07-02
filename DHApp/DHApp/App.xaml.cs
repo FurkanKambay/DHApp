@@ -55,7 +55,7 @@ namespace DHApp
             Exit += (s, a) =>
             {
                 trayIcon.Visible = false;
-                notifier.Dispose();
+                notifier?.Dispose();
                 Logger.Log("Application exit");
             };
         }

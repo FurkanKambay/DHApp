@@ -121,13 +121,10 @@ namespace DHApp
             SendToBackground();
         }
 
-        private async void NotificationClicked(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void NotificationClicked(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (sender is ListViewItem item && item.IsSelected && item.Content is DHNotification notification)
-            {
                 Process.Start(notification.Url);
-                await RefreshNotificationsAsync();
-            }
         }
         #endregion Click Events
 
