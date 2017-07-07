@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Timers;
@@ -15,10 +14,10 @@ namespace DHApp
     {
         #region Fields
         private const int notificationTimeout = 3000;
-        private Timer timer;
+        private Timer timer = new Timer(1000 * 10);
 
         public new MainWindow MainWindow;
-        private IEnumerable<DHNotification> lastNotifications;
+        private DHNotification[] lastNotifications;
 
         private Notifier notifier;
         private Forms.NotifyIcon trayIcon;
@@ -26,10 +25,7 @@ namespace DHApp
 
         public App()
         {
-            timer = new Timer(1000 * 30); // 10 = seconds
-            timer.Elapsed += async (s, a) => MainWindow.Notifications = await DHClient.GetNotificationsAsync();
-
-            lastNotifications = Enumerable.Empty<DHNotification>();
+            timer.Elapsed += Timer_Elapsed;
 
             trayIcon = new Forms.NotifyIcon
             {
@@ -47,7 +43,6 @@ namespace DHApp
                     StopBackgroundWorker();
 
                     MainWindow.Show();
-                    MainWindow.Activate();
                     MainWindow.Notifications = await DHClient.GetNotificationsAsync();
                 }
             };
@@ -71,7 +66,6 @@ namespace DHApp
 
             lastNotifications = MainWindow.Notifications;
 
-            MainWindow.PropertyChanged += NewNotificationArrived;
             trayIcon.Visible = true;
             InitializeNotifier();
             timer.Start();
@@ -84,17 +78,13 @@ namespace DHApp
             timer.Stop();
             notifier?.Dispose();
             trayIcon.Visible = false;
-            MainWindow.PropertyChanged -= NewNotificationArrived;
 
             Logger.Log("Background worker stopped");
         }
 
-        public void ShowNotification(DHNotification notification) =>
-            ShowMessage(notification.Content, notification.Url);
-
-        public void ShowMessage(string message, string url = null)
+        public void ShowMessage(string message, string clickUrl = null)
         {
-            string messageType = (url == null) ? "message" : "notification";
+            string messageType = (clickUrl == null) ? "message" : "notification";
 
             if (!trayIcon.Visible)
             {
@@ -102,8 +92,7 @@ namespace DHApp
                 throw new InvalidOperationException("Tray icon is not visible");
             }
 
-            notifier.ShowMessage(message, url);
-
+            notifier.ShowMessage(message, clickUrl);
             Logger.Log("Showed " + messageType);
         }
         #endregion Public Methods
@@ -127,21 +116,18 @@ namespace DHApp
             });
         }
 
-        private void NewNotificationArrived(object sender, System.ComponentModel.PropertyChangedEventArgs args)
+        private async void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if (args.PropertyName == nameof(MainWindow.Notifications))
-            {
-                var currentNotifications = MainWindow.Notifications.Where(n => n.IsNew);
-                var newNotifications = currentNotifications.Except(lastNotifications);
+            var currentNotifications = await DHClient.GetNotificationsAsync() ?? Array.Empty<DHNotification>();
+            var lastUrls = lastNotifications.Select(l => l.Url);
 
-                if (newNotifications.Any())
-                    Logger.Log("New notification(s) arrived");
+            var news = currentNotifications
+                .Where(current => !lastUrls.Contains(current.Url))
+                .ToList();
 
-                foreach (var notification in newNotifications)
-                    ShowNotification(notification);
+            news.ForEach(n => ShowMessage(n.Content, n.Url));
 
-                lastNotifications = currentNotifications;
-            }
+            lastNotifications = currentNotifications;
         }
         #endregion Private Methods
     }

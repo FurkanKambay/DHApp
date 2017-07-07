@@ -1,9 +1,7 @@
 ﻿using DHApp.Properties;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
@@ -17,10 +15,10 @@ namespace DHApp
         #region Properties and Fields
         private static App app = (App)Application.Current;
 
-        private IEnumerable<DHNotification> notifications;
-        public IEnumerable<DHNotification> Notifications
+        private DHNotification[] notifications;
+        public DHNotification[] Notifications
         {
-            get => notifications ?? Enumerable.Empty<DHNotification>();
+            get => notifications ?? Array.Empty<DHNotification>();
             set
             {
                 if (notifications != value)

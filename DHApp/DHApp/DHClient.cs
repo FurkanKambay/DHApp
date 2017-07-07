@@ -2,7 +2,6 @@
 using RestSharp;
 using RestSharp.Extensions.MonoHttp;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
@@ -88,7 +87,7 @@ namespace DHApp
             if (string.IsNullOrEmpty(cookie))
                 throw new InvalidOperationException("Cookies are corrupt");
 
-            //TODO: check if login worked
+            //TODO: Check if login worked
 
             //var response = await client.ExecuteGetTaskAsync(
             //    new RestRequest(getNotificationsPath).AddCookie(cookieName, cookie));
@@ -128,7 +127,7 @@ namespace DHApp
             Logout?.Invoke();
         }
 
-        public static async Task<IEnumerable<DHNotification>> GetNotificationsAsync()
+        public static async Task<DHNotification[]> GetNotificationsAsync()
         {
             if (!IsLoggedIn)
                 throw new InvalidOperationException("Not logged in");
@@ -153,33 +152,9 @@ namespace DHApp
                 .DocumentNode
                 .ChildNodes["div"]
                 .Descendants("a")
-                .Where(a => a.Attributes["class"].Value.Contains("bildirim"))
-                .ToList()
-                .Select(a =>
-                {
-                    string iconUrl = null;
-                    string time = null;
-
-                    //BUG: Server-side error or HTTP request problem. Use alternative request up there ^
-                    var span = a.Descendants("span").SingleOrDefault();
-                    if (span != null)
-                    {
-                        iconUrl = span.ChildNodes["img"].Attributes["src"].Value;
-                        time = FixText(span.InnerText);
-
-                        if (a.ChildNodes.Contains(span))
-                            a.RemoveChild(span);
-                    }
-
-                    return new DHNotification
-                    {
-                        Content = FixText(a.InnerHtml),
-                        Time = time,
-                        Url = forumUrl + FixText(a.Attributes["href"].Value),
-                        IconUrl = iconUrl,
-                        IsNew = a.Attributes["class"].Value == "bildirim yeni"
-                    };
-                });
+                .Where(a => a.Attributes["class"].Value == "bildirim yeni")
+                .Select(HtmlNodeToNotification)
+                .ToArray();
         }
 
         public static async Task IgnoreNotificationsAsync()
@@ -228,6 +203,42 @@ namespace DHApp
         #endregion Public Methods
 
         #region Private Methods
+        private static DHNotification HtmlNodeToNotification(HtmlNode node)
+        {
+            string iconUrl = null;
+            string time = null;
+
+            try
+            {
+                var children = node.ChildNodes;
+                var span = children.FindFirst("span"); // a.Descendants("span").SingleOrDefault();
+                                                       // collection was modified ??
+                if (span != null)
+                {
+                    iconUrl = span.ChildNodes["img"].Attributes["src"].Value;
+                    time = FixText(span.InnerText);
+
+                    // "there is no span in node" ???
+                    if (node.ChildNodes.Contains(span))
+                        node.RemoveChild(span);
+                }
+
+            }
+            catch (Exception up)
+            {
+                //BUG: Server-side error or HTTP request problem. Use alternative request up there ^
+                throw up;
+            }
+
+            return new DHNotification
+            {
+                Content = FixText(node.InnerHtml),
+                Time = time,
+                Url = forumUrl + FixText(node.Attributes["href"].Value),
+                IconUrl = iconUrl
+            };
+        }
+
         private static string FixText(string source, string toRemove = "\n") =>
             WebUtility.HtmlDecode(source.Replace(toRemove, string.Empty).Trim());
 

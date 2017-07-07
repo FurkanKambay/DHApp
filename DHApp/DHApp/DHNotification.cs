@@ -6,6 +6,5 @@
         public string Time { get; set; }
         public string Url { get; set; }
         public string IconUrl { get; set; }
-        public bool IsNew { get; set; }
     }
 }
