@@ -48,10 +48,10 @@ namespace DHApp
 
             LoginButton.IsEnabled = isNameOk && isPassOk;
 
-            var orange = FindResource("ThemeColor") as Brush;
-            var red = new SolidColorBrush(Colors.Red);
-            UsernameTB.BorderBrush = isNameOk ? orange : red;
-            PasswordPB.BorderBrush = isPassOk ? orange : red;
+            Brush getColorOf(bool condition) => condition ? (Brush)FindResource("ThemeColor") : new SolidColorBrush(Colors.Red);
+
+            UsernameTB.BorderBrush = getColorOf(isNameOk);
+            PasswordPB.BorderBrush = getColorOf(isPassOk);
         }
     }
 }

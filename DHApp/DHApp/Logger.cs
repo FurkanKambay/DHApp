@@ -3,6 +3,7 @@ using System.IO;
 
 namespace DHApp
 {
+    //TODO: remove logging?
     public static class Logger
     {
         static Logger() => Log("Log started");

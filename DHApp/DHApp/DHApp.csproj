@@ -135,7 +135,6 @@
     <Compile Include="CustomDisplayPart.xaml.cs">
       <DependentUpon>CustomDisplayPart.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CustomNotification.cs" />
     <Compile Include="DHClient.cs" />
     <Compile Include="DHNotification.cs" />
     <Compile Include="GlobalSuppressions.cs" />
@@ -150,7 +149,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="NotificationExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -6,12 +6,15 @@ namespace DHApp
 {
     public partial class CustomDisplayPart : NotificationDisplayPart
     {
-        private CustomNotification _notification;
+        public DHNotification _notification;
 
-        public CustomDisplayPart(CustomNotification notification)
+        public CustomDisplayPart(DHNotification notification)
         {
-            DataContext = _notification = notification;
             InitializeComponent();
+            DataContext = _notification = notification;
+
+            if (!string.IsNullOrWhiteSpace(notification.Url))
+                Cursor = Cursors.Hand;
         }
 
         private void NotificationClicked(object sender, MouseButtonEventArgs e)
@@ -20,6 +23,6 @@ namespace DHApp
                 Process.Start(_notification.Url);
         }
 
-        protected override void OnMouseEnter(MouseEventArgs e) { } //BUG
+        protected override void OnMouseEnter(MouseEventArgs e) { } // ToastNotifications bug.
     }
 }

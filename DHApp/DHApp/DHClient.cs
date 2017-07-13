@@ -208,35 +208,20 @@ namespace DHApp
             string iconUrl = null;
             string time = null;
 
-            try
-            {
-                var children = node.ChildNodes;
-                var span = children.FindFirst("span"); // a.Descendants("span").SingleOrDefault();
-                                                       // collection was modified ??
-                if (span != null)
-                {
-                    iconUrl = span.ChildNodes["img"].Attributes["src"].Value;
-                    time = FixText(span.InnerText);
+            var span = node.ChildNodes.FindFirst("span");
 
-                    // "there is no span in node" ???
-                    if (node.ChildNodes.Contains(span))
-                        node.RemoveChild(span);
-                }
+            iconUrl = span.ChildNodes["img"].Attributes["src"].Value;
+            time = FixText(span.InnerText);
 
-            }
-            catch (Exception up)
-            {
-                //BUG: Server-side error or HTTP request problem. Use alternative request up there ^
-                throw up;
-            }
+            span.Remove();
 
             return new DHNotification
-            {
-                Content = FixText(node.InnerHtml),
-                Time = time,
-                Url = forumUrl + FixText(node.Attributes["href"].Value),
-                IconUrl = iconUrl
-            };
+            (
+                content: FixText(node.InnerHtml),
+                time: time,
+                url: forumUrl + FixText(node.Attributes["href"].Value),
+                iconUrl: iconUrl
+            );
         }
 
         private static string FixText(string source, string toRemove = "\n") =>

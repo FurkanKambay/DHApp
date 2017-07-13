@@ -17,7 +17,7 @@ namespace DHApp
         private Timer timer = new Timer(1000 * 10);
 
         public new MainWindow MainWindow;
-        private DHNotification[] lastNotifications;
+        private string[] lastNotifications;
 
         private Notifier notifier;
         private Forms.NotifyIcon trayIcon;
@@ -64,7 +64,7 @@ namespace DHApp
                 throw new InvalidOperationException("App.MainWindow must not be null.");
             }
 
-            lastNotifications = MainWindow.Notifications;
+            lastNotifications = MainWindow.Notifications.Select(n => n.Url).ToArray();
 
             trayIcon.Visible = true;
             InitializeNotifier();
@@ -88,12 +88,12 @@ namespace DHApp
 
             if (!trayIcon.Visible)
             {
-                Logger.Log("Couldn't show " + messageType);
+                Logger.Log($"Couldn't show {messageType}");
                 throw new InvalidOperationException("Tray icon is not visible");
             }
 
-            notifier.ShowMessage(message, clickUrl);
-            Logger.Log("Showed " + messageType);
+            notifier.Notify<DHNotification>(() => new DHNotification(message, clickUrl));
+            Logger.Log($"Showed {messageType}");
         }
         #endregion Public Methods
 
@@ -118,16 +118,14 @@ namespace DHApp
 
         private async void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
+            timer.Stop();
             var currentNotifications = await DHClient.GetNotificationsAsync() ?? Array.Empty<DHNotification>();
-            var lastUrls = lastNotifications.Select(l => l.Url);
 
-            var news = currentNotifications
-                .Where(current => !lastUrls.Contains(current.Url))
-                .ToList();
+            foreach (var newOne in currentNotifications.Where(n => !lastNotifications.Contains(n.Url)))
+                ShowMessage(newOne.Content, newOne.Url);
 
-            news.ForEach(n => ShowMessage(n.Content, n.Url));
-
-            lastNotifications = currentNotifications;
+            lastNotifications = currentNotifications.Select(n => n.Url).ToArray();
+            timer.Start();
         }
         #endregion Private Methods
     }
