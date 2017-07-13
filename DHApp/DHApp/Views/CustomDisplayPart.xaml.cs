@@ -2,7 +2,7 @@
 using System.Windows.Input;
 using ToastNotifications.Core;
 
-namespace DHApp
+namespace DHApp.Views
 {
     public partial class CustomDisplayPart : NotificationDisplayPart
     {

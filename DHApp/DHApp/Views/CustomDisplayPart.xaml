@@ -1,4 +1,4 @@
-﻿<core:NotificationDisplayPart x:Class="DHApp.CustomDisplayPart"
+﻿<core:NotificationDisplayPart x:Class="DHApp.Views.CustomDisplayPart"
                               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                               xmlns:core="clr-namespace:ToastNotifications.Core;assembly=ToastNotifications"
@@ -14,7 +14,7 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Image Width="48" Source="Images/DHLogo.jpg" />
+        <Image Width="48" Source="/DHApp;component/Images/DHLogo.jpg" />
         <ContentControl Grid.Column="1"
                         Margin="4"
                         VerticalAlignment="Center"

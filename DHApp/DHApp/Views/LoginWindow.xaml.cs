@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 
-namespace DHApp
+namespace DHApp.Views
 {
     public partial class LoginWindow : Window
     {

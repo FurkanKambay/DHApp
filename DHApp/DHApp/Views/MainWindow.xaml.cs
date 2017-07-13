@@ -8,7 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace DHApp
+namespace DHApp.Views
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {

@@ -1,4 +1,5 @@
 ﻿using ToastNotifications.Core;
+using DHApp.Views;
 
 namespace DHApp
 {

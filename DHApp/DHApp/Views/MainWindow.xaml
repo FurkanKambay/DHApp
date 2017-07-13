@@ -1,7 +1,7 @@
-﻿<Window x:Class="DHApp.MainWindow"
+﻿<Window x:Class="DHApp.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:DHApp"
+        xmlns:local="clr-namespace:DHApp.Views"
         Width="480"
         FontSize="16"
         ResizeMode="NoResize"
@@ -17,7 +17,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Image Width="48" Source="Images/dhlogo.jpg" />
+            <Image Width="48" Source="/DHApp;component/Images/DHLogo.jpg" />
             <TextBlock Grid.Column="1"
                        Margin="8,0,0,0"
                        VerticalAlignment="Center"
@@ -46,7 +46,8 @@
                 </StackPanel.ContextMenu>
                 <Image x:Name="Avatar"
                        Width="24"
-                       Source="Images/DefaultAvatar.gif" />
+                       Height="24"
+                       Source="/DHApp;component/Images/DefaultAvatar.gif" />
                 <TextBlock x:Name="UsernameText"
                            Margin="4"
                            HorizontalAlignment="Center"

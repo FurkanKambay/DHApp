@@ -1,5 +1,4 @@
-﻿<Window
-    x:Class="DHApp.LoginWindow"
+﻿<Window x:Class="DHApp.Views.LoginWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     FontSize="16"
@@ -18,7 +17,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Image Width="48" Source="Images/DHLogo.jpg" />
+            <Image Width="48" Source="/DHApp;component/Images/DHLogo.jpg" />
             <TextBlock
                 Grid.Column="1"
                 Margin="8,0,0,0"
