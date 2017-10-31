@@ -72,8 +72,6 @@ namespace DHApp.Views
             if (!string.IsNullOrWhiteSpace(await DHClient.GetAvatarUrlAsync()))
                 Avatar.Source = new BitmapImage(new Uri(DHClient.AvatarUrl));
 
-            Logger.Log("Logged in");
-
             await RefreshNotificationsAsync();
         }
 
@@ -83,8 +81,6 @@ namespace DHApp.Views
 
             Settings.Default.Cookie = null;
             Settings.Default.Save();
-
-            Logger.Log("Logged out");
 
             Notifications = null;
             ShowLoginWindow();
@@ -102,7 +98,6 @@ namespace DHApp.Views
             CanOperate = false;
 
             await DHClient.IgnoreNotificationsAsync();
-            Logger.Log("Ignored notifications");
             Notifications = null;
 
             CanOperate = true;
@@ -116,7 +111,9 @@ namespace DHApp.Views
 
         private void CloseClicked(object sender, RoutedEventArgs e)
         {
-            SendToBackground();
+            Hide();
+            app.StartBackgroundWorker();
+            app.ShowMessage("Program arka planda çalışmaya devam ediyor. Yeni bildirimlerden haberdar edileceksiniz.");
         }
 
         private void NotificationClicked(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -135,13 +132,6 @@ namespace DHApp.Views
                 Show();
             else
                 app.Shutdown();
-        }
-
-        private void SendToBackground()
-        {
-            app.StartBackgroundWorker();
-            app.ShowMessage("Program arka planda çalışmaya devam ediyor. Yeni bildirimlerden haberdar edileceksiniz.");
-            Hide();
         }
 
         private async Task RefreshNotificationsAsync()

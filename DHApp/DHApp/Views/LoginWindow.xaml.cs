@@ -32,7 +32,7 @@ namespace DHApp.Views
                 UsernameTB.Focus();
             };
 
-            LoginButton.Click += async (s, a) =>
+            LoginButton.Click += async (_, __) =>
             {
                 LoginPanel.IsEnabled = false;
                 tryToLogIn(await DHClient.LogInAsync(UsernameTB.Text, PasswordPB.Password));
@@ -43,8 +43,8 @@ namespace DHApp.Views
 
         private void Box_TextChanged(object sender, RoutedEventArgs e)
         {
-            bool isNameOk = !string.IsNullOrWhiteSpace(UsernameTB.Text);
-            bool isPassOk = !string.IsNullOrWhiteSpace(PasswordPB.Password);
+            var isNameOk = !string.IsNullOrWhiteSpace(UsernameTB.Text);
+            var isPassOk = !string.IsNullOrWhiteSpace(PasswordPB.Password);
 
             LoginButton.IsEnabled = isNameOk && isPassOk;
 

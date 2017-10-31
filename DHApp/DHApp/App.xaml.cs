@@ -2,27 +2,25 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
 using ToastNotifications;
 using ToastNotifications.Lifetime;
 using ToastNotifications.Position;
 using Forms = System.Windows.Forms;
+using Threading = System.Threading;
 
 namespace DHApp
 {
     public partial class App : Application
     {
-        #region Fields
-        private const int notificationTimeout = 3000;
-        private Timer timer = new Timer(1000 * 10);
-
         public new MainWindow MainWindow;
-        private string[] lastNotifications;
 
         private Notifier notifier;
         private Forms.NotifyIcon trayIcon;
-        #endregion Fields
+        private Timer timer = new Timer(1000 * 5);
+        private string[] lastNotifications;
 
         public App()
         {
@@ -37,9 +35,9 @@ namespace DHApp
                 })
             };
 
-            trayIcon.MouseDoubleClick += async (s, args) =>
+            trayIcon.MouseDoubleClick += async (s, a) =>
             {
-                if (args.Button == Forms.MouseButtons.Left)
+                if (a.Button == Forms.MouseButtons.Left)
                 {
                     StopBackgroundWorker();
 
@@ -52,53 +50,23 @@ namespace DHApp
             {
                 trayIcon.Visible = false;
                 notifier?.Dispose();
-                Logger.Log("Application exit");
             };
         }
 
-        #region Public Methods
         public void StartBackgroundWorker()
         {
             if (MainWindow == null)
-            {
-                Logger.Log("Couldn't start background worker");
-                throw new InvalidOperationException("App.MainWindow must not be null.");
-            }
+                throw new InvalidOperationException("App.MainWindow is null.");
 
             lastNotifications = MainWindow.Notifications.Select(n => n.Url).ToArray();
 
             trayIcon.Visible = true;
+
             InitializeNotifier();
+
             timer.Start();
-
-            Logger.Log("Background worker started");
         }
 
-        public void StopBackgroundWorker()
-        {
-            timer.Stop();
-            notifier?.Dispose();
-            trayIcon.Visible = false;
-
-            Logger.Log("Background worker stopped");
-        }
-
-        public void ShowMessage(string message, string clickUrl = null)
-        {
-            string messageType = (clickUrl == null) ? "message" : "notification";
-
-            if (!trayIcon.Visible)
-            {
-                Logger.Log($"Couldn't show {messageType}");
-                throw new InvalidOperationException("Tray icon is not visible");
-            }
-
-            notifier.Notify<DHNotification>(() => new DHNotification(message, clickUrl));
-            Logger.Log($"Showed {messageType}");
-        }
-        #endregion Public Methods
-
-        #region Private Methods
         private void InitializeNotifier()
         {
             notifier?.Dispose();
@@ -117,17 +85,39 @@ namespace DHApp
             });
         }
 
+        public void StopBackgroundWorker()
+        {
+            timer.Stop();
+            notifier?.Dispose();
+            trayIcon.Visible = false;
+        }
+
+        public void ShowMessage(string message, string clickUrl = null)
+        {
+            if (notifier == null)
+                throw new InvalidOperationException("Notifier is null. Initialize the notifier first.");
+
+            notifier.Notify<DHNotification>(() => new DHNotification(message, clickUrl));
+
+            // await Task.Delay(TimeSpan.FromSeconds(5));
+            // notifier?.Dispose();
+        }
+
         private async void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             timer.Stop();
             var currentNotifications = await DHClient.GetNotificationsAsync() ?? Array.Empty<DHNotification>();
 
+            // InitializeNotifier();
+            // BUG: "belongs to different thread"
+
             foreach (var newOne in currentNotifications.Where(n => !lastNotifications.Contains(n.Url)))
                 ShowMessage(newOne.Content, newOne.Url);
+
+            // notifier?.Dispose();
 
             lastNotifications = currentNotifications.Select(n => n.Url).ToArray();
             timer.Start();
         }
-        #endregion Private Methods
     }
 }

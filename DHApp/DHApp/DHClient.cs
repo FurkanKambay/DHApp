@@ -2,6 +2,7 @@
 using RestSharp;
 using RestSharp.Extensions.MonoHttp;
 using System;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
@@ -31,6 +32,9 @@ namespace DHApp
         #region Public Methods
         public static async Task<bool> LogInAsync(string username, string password)
         {
+            Contract.Requires(string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password));
+            Contract.Requires(IsLoggedIn, "Already logged in");
+
             if (IsLoggedIn)
                 throw new InvalidOperationException("Already logged in");
 
@@ -52,9 +56,9 @@ namespace DHApp
                 var doc = new HtmlDocument();
                 doc.LoadHtml(response.Content);
 
-                if (doc.DocumentNode.ChildNodes["html"]?.Name == "html")
+                if (doc.DocumentNode.ChildNodes["html"] != null)
                 {
-                    string encryptedCookie = GetLoginCookie(client.CookieContainer.GetCookieHeader(new Uri(forumUrl)));
+                    var encryptedCookie = GetLoginCookie(client.CookieContainer.GetCookieHeader(new Uri(forumUrl)));
 
                     Username = GetUserNameDecoded(encryptedCookie);
                     IsLoggedIn = true;
@@ -78,7 +82,7 @@ namespace DHApp
             if (string.IsNullOrWhiteSpace(encryptedCookie))
                 return false;
 
-            string cookie = GetLoginCookie(Encoding.ASCII.GetString(
+            var cookie = GetLoginCookie(Encoding.ASCII.GetString(
                 ProtectedData.Unprotect(
                         Convert.FromBase64String(encryptedCookie),
                         Encoding.ASCII.GetBytes(entropy),
@@ -181,7 +185,7 @@ namespace DHApp
             {
                 if (FixText(node.InnerText, "\\n") == username)
                 {
-                    string url = node
+                    var url = node
                         .ChildNodes["div"]
                         .ChildNodes["img"]
                         .Attributes["src"]
